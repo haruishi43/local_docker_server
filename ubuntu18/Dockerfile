@@ -2,7 +2,7 @@ FROM ubuntu:18.04
 MAINTAINER Haruya Ishikawa <haruyaishikawa@keio.jp>
 ENV DEBIAN_FRONTEND "noninteractive"
 
-COPY motd /etc
+# COPY motd /etc
 RUN apt-get update
 RUN apt-get -y \
             -o Dpkg::Options::="--force-confdef" \
@@ -21,14 +21,10 @@ RUN apt-get update
 RUN apt-get install -y vim
 
 # install tmux
-RUN mkdir /tmp/tmux
-WORKDIR /tmp/tmux
-RUN curl -LO https://github.com/tmux/tmux/releases/download/2.8/tmux-2.8.tar.gz
-RUN tar xfvz tmux-2.8.tar.gz
-WORKDIR /tmp/tmux/tmux-2.8/
-RUN ./configure && make
-RUN cp -p /tmp/tmux/tmux-2.8/tmux /usr/local/sbin
-WORKDIR /
+RUN apt-get install tmux
+
+# install neofetch
+RUN apt-get install neofetch
 
 # set local
 RUN locale-gen en_US.UTF-8
@@ -64,11 +60,10 @@ RUN git clone https://github.com/pyenv/pyenv.git $HOME/.pyenv
 ENV PYENV_ROOT $HOME/.pyenv
 ENV PATH $PYENV_ROOT/shims:$PYENV_ROOT/bin:$PATH
 RUN eval "$(pyenv init -)"
-RUN pyenv install anaconda3-5.2.0
-RUN pyenv install 3.8.2
+RUN pyenv install 3.8.6
 RUN pyenv rehash
-RUN pyenv global 3.8.2
-RUN pip install --upgrade pip
+RUN pyenv global 3.8.6
+RUN pip install -U pip
 
 RUN mkdir $HOME/private
 RUN touch $HOME/private/.zsh_history
