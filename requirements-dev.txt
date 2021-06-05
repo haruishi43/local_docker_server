@@ -1,0 +1,5 @@
+black
+hacking
+isort
+pre-commit
+pytest
