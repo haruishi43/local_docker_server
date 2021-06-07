@@ -4,4 +4,5 @@
 Dhole!
 """
 
-__version__ = "0.0.1"
+from .env import CLIENT, init_client
+from .version import __version__

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 
-from .config import CONFIG
+from dhole.config import Config
 
 
 def test_config():
-    print(CONFIG)
+    config_path = "./tests/configs/test_server.py"
+
+    cfg = Config.fromfile(config_path)
+
+    print(cfg)
