@@ -9,3 +9,15 @@ def test_config():
     cfg = Config.fromfile(config_path)
 
     print(cfg)
+
+    # TODO: some other tests
+    print(type(cfg))  # Config
+    print(type(cfg['server']))  # ConfigDict
+
+    users = cfg.server.users
+    user = users[0]
+
+    user_cfg = cfg.get(user)
+    print(user_cfg)
+    print(type(user_cfg.user1_container1))
+    print(user_cfg.keys())

@@ -5,6 +5,17 @@ from .errors import APIError, BuildError
 from .logger import logger
 
 
+class Image:
+    def __init__(self):
+        pass
+
+    def build(self):
+        pass
+
+    def delete(self):
+        pass
+
+
 def build_image(
     root: str,
     dockerfile: str,
@@ -26,8 +37,3 @@ def build_image(
         raise e
 
     return img
-
-
-class Image(object):
-    def __init__(self):
-        pass

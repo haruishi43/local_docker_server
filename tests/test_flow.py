@@ -3,15 +3,10 @@
 import os
 import time
 
-import docker
-
-
-global_client = docker.from_env()
+from dhole import build_image
 
 
 def test_flow():
-
-    client = docker.from_env()
 
     tag = "alpinetest_failure"
     image_root = "./tests/images/"

@@ -1,4 +1,5 @@
 - [ ] Create some test cases for usages
+  - [ ] Test configuration file
 
 
 ---
