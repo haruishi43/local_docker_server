@@ -14,8 +14,5 @@ RUN apk --update add --no-cache openssh bash \
     && /usr/bin/ssh-keygen -A \
     && ssh-keygen -t rsa -b 4096 -f  /etc/ssh/ssh_host_key
 
-# trying to make a user
-RUN mkdir /home/alpine
-
 EXPOSE 22
 CMD ["/usr/sbin/sshd","-D"]

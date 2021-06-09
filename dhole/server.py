@@ -4,18 +4,13 @@
 Server Module
 """
 
-from .config import Config
+from .config import Config, load_cfg
 from .images import ImageCollection
+from .logger import logger
 from .users import UserCollection
 
 
-class Server:
-
-    @staticmethod
-    def fromfile(filename: str):
-        cfg = Config.fromfile(filename)
-        return Server(cfg=cfg)
-
+class ServerV1:
     def __init__(
         self,
         cfg: Config,
@@ -27,8 +22,18 @@ class Server:
             cfg=cfg,
         )
 
+    @staticmethod
+    def fromfile(filename: str):
+        cfg = load_cfg(filename)
+        return ServerV1(cfg=cfg)
+
     def build_images(self):
-        pass
+        for image in self.images:
+            logger.info(image)
+            image.build()
 
     def run_containers(self):
-        pass
+        containers = self.users.containers
+        for container in containers:
+            logger.info(container)
+            container.run()

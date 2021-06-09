@@ -1,1 +1,3 @@
+addict
 docker
+python-on-whales

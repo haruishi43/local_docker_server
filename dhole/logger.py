@@ -4,4 +4,5 @@ import logging
 
 __all__ = ["logger"]
 
-logger = logging.Logger("dhole")
+_level = logging.DEBUG  # FIXME: change this when it's release
+logger = logging.Logger("dhole", encoding="utf-8", level=_level,)

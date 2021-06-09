@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from copy import deepcopy
-from typing import List
+from typing import List, Union
 
 from .config import Config, ConfigDict
 from .env import CLIENT
@@ -35,15 +35,28 @@ def build_image(
 class Image:
     def __init__(
         self,
-        image_name: str,
+        name: str,
         image_cfg: ConfigDict,
     ) -> None:
-        self.image_name = image_name
-        self.image_path = image_cfg.image_name
-        self.image_labels = image_cfg.labels
+        self.name = name
+        self.path = image_cfg.path
+        self.labels = image_cfg.labels
+
+    def __repr__(self) -> str:
+        return (
+            f"Image: {self.name}\n"
+            f"\tpath: {self.path}\n"
+            f"\tlabels: {self.labels}\n"
+        )
 
     def build(self):
-        pass
+        logger.info(f"Building {self.name}...")
+        image = build_image(
+            root=self.path,
+            dockerfile=f"{self.name}.dockerfile",
+            tag=self.labels,
+        )
+        return image
 
     def delete(self):
         pass
@@ -55,22 +68,30 @@ class ImageCollection:
         images: List[str],
         cfg: Config,
     ) -> None:
-        self.images = images
+        if len(set(images)) < len(images):
+            logger.warning("WARN: there are duplicate images")
+            images = list(set(images))
 
-        default_image_path = deepcopy(cfg.image_path)
+        self.names = images
+
+        default_path = deepcopy(cfg.image_path)
         default_labels = deepcopy(cfg.labels)
         image_cfg = {}
-        for image in self.images:
-            if image not in list(cfg.keys()):
+        for image in images:
+            if image not in cfg.keys():
                 cfg[image] = {
-                    "image_path": default_image_path,
+                    "name": image,
+                    "path": default_path,
                     "labels": default_labels,
                 }
             else:
-                keys = list(cfg[image].keys())
-                # image_path
-                if "image_path" not in keys:
-                    cfg[image].image_path = default_image_path
+                keys = cfg[image].keys()
+                # name
+                if "name" not in keys:
+                    cfg[image].name = image
+                # path
+                if "path" not in keys:
+                    cfg[image].path = default_path
                 # labels
                 labels = {}
                 labels.update(default_labels)
@@ -85,6 +106,18 @@ class ImageCollection:
         self.images = {}
         for k, v in self.image_cfg.items():
             self.images[k] = Image(
-                image_name=k,
+                name=k,
                 image_cfg=v,
             )
+
+    def __len__(self) -> int:
+        return len(self.names)
+
+    def __getitem__(self, i: Union[int, str]) -> Image:
+        if isinstance(i, int):
+            name = self.names[i]
+        elif isinstance(i, str):
+            name = i
+        assert name in self.images.keys(), \
+            f"ERR: {name} is not a valid image name"
+        return self.images[name]

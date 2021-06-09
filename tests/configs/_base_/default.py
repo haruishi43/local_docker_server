@@ -1,6 +1,6 @@
 image_path = "./tests/images",  # path to the dockerfiles
 labels = dict(
-    manager="dhole",
+    manager="dhole_test",
 )
 server = dict(
     ip="localhost",

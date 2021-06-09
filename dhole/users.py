@@ -4,9 +4,8 @@
 User Module
 """
 
-from copy import deepcopy
 import os
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from .config import Config, ConfigDict
 from .containers import Container, ContainerCollection
@@ -15,117 +14,6 @@ from .logger import logger
 __all__ = [
     "UserCollection",
 ]
-
-
-def refine_volumes(
-    unrefined_volumes: Dict[str, Dict[str, str]],
-    user: str,
-    target_user_name: str,
-) -> Dict[str, Dict[str, str]]:
-    """Refine Volumes
-
-    unrefined volumes have string formatting to be done,
-    this function formats the strings accordingly
-    """
-    args = {
-        "host_home": os.getenv("HOME"),
-        "host_curdir": os.getcwd(),
-        "user": user,
-        "home": f"/home/{target_user_name}",
-    }
-    volumes = {}
-    for k, v in unrefined_volumes.items():
-        key = k.format(**args)
-        v["bind"] = v["bind"].format(**args)
-        volumes[key] = v
-    return volumes
-
-
-def refine_ports(
-    unrefined_ports: Dict[str, int],
-    port_id: int,
-    container_id: int,
-) -> Dict[str, int]:
-    """Refine Ports
-
-    unrefined ports have string formatting to be done,
-    this function formats the strings accordingly
-
-    NOTE: ports are 5 "digits" long (`{port_id}{access_port}{container_id}`)
-    `access_port` is customizable inside the config.
-    """
-    args = {
-        "port_id": str(port_id).zfill(2),
-        "container_id": str(container_id).zfill(2),
-    }
-    ports = {}
-    for k, v in unrefined_ports.items():
-        key = k.format(**args)
-        ports[key] = v
-    return ports
-
-
-def refine_user_cfg(
-    user: str,
-    cfg: Config,
-) -> ConfigDict:
-    user_cfg = cfg.get(user)
-
-    containers = list(user_cfg.keys())
-    assert len(containers) > 0, \
-        f"ERR: {user} must have more than 1 container"
-
-    for container in containers:
-        container_cfg = user_cfg.get(container)
-
-        # overwrite the defaults
-        container_cfg.volumes.update(cfg.server.volumes)
-        container_cfg.ports.update(cfg.server.ports)
-
-        # refine and update dict
-        # volumes
-        container_cfg.volumes = refine_volumes(
-            container_cfg.volumes,
-            user=user,
-            target_user_name=container_cfg.target_user_name,
-        )
-        # ports
-        container_cfg.ports = refine_ports(
-            container_cfg.ports,
-            port_id=cfg.server.port_id,
-            container_id=container_cfg.container_id,
-        )
-        # labels
-        labels = {}
-        labels.update(deepcopy(cfg.labels))
-        if "labels" in list(container_cfg.keys()):
-            labels.update(deepcopy(container_cfg.labels))
-        container_cfg.labels = labels
-
-        user_cfg[container] = container_cfg
-
-    assert isinstance(user_cfg, ConfigDict)
-
-    return user_cfg
-
-
-def refine_user_cfgs(
-    cfg: Config,
-) -> Config:
-    assert isinstance(cfg, Config), \
-        f"ERR: given config is type {type(cfg)} instead of Config"
-
-    users = cfg.server.users
-    assert isinstance(users, list), \
-        f"ERR: The given variable for `users` is not a list: {users}"
-    assert len(users) > 0, "ERR: The given list `users` is empty"
-
-    for user in users:
-        cfg[user] = refine_user_cfg(user, cfg)
-
-    assert isinstance(cfg, Config)
-
-    return cfg
 
 
 class User:
@@ -141,6 +29,13 @@ class User:
             user_cfg=self.user_cfg,
         )
 
+    def __repr__(self) -> str:
+        containers = list(self.container_collection.containers.keys())
+        return (
+            f"User: {self.user_name}\n"
+            f"\t Containers: {containers}\n"
+        )
+
     def __len__(self):
         return len(self.containers)
 
@@ -154,7 +49,7 @@ class User:
         containers = []
         for k, v in self.user_cfg.items():
             # for now, just check if the container has container_id, which is unique
-            if "container_id" in list(v.keys()):
+            if "container_id" in v.keys():
                 containers.append(k)
         assert len(containers) > 0, f"ERR: {self.user_name} doesn't have any containers"
         return containers
@@ -176,30 +71,30 @@ class UserCollection:
         self,
         cfg: Config,
     ) -> None:
-        # refine cfg
-        cfg = refine_user_cfgs(cfg)
-
         # initialize users
         users = cfg.server.users
         user_dict = {}
         for user in users:
-            assert user not in list(user_dict.keys()), \
+            assert user not in user_dict.keys(), \
                 f"ERR: {user} name is already used, check config"
             user_dict[user] = User(
                 user_name=user,
                 user_cfg=cfg.get(user),
             )
-        self._user_dict = user_dict
-
-        # self.user_checks(self._user_dict)
+        self.user_names = users
+        self.users = user_dict
+        self.user_checks(self.users)
 
     def __len__(self):
-        return len(self._user_dict)
+        return len(self.user_names)
 
-    def __getitem__(self, i):
-        # FIXME: does this work?
-        user = self.user_dict.values()[i]
-        return user
+    def __getitem__(self, i: Union[str, int]) -> User:
+        if isinstance(i, int):
+            name = self.user_names[i]
+        elif isinstance(i, str):
+            name = i
+        assert name in self.user_names, f"ERR: {name} is not a valid key"
+        return self.users[name]
 
     @staticmethod
     def user_checks(users: Dict[str, User]) -> None:
@@ -226,20 +121,16 @@ class UserCollection:
                 os.makedirs(volume)
 
     @property
-    def users(self) -> List[str]:
-        return list(self._user_dict.keys())
-
-    @property
     def images(self) -> List[str]:
         images = []
-        for _, user in self._user_dict.items():
-            images += user.images
+        for _, user in self.users.items():
+            images += user.list_images
         images = list(set(images))
         return images
 
     @property
     def containers(self) -> List[Container]:
         containers = []
-        for name, user in self._user_dict.items():
+        for _, user in self.users.items():
             containers += user.containers
         return containers
