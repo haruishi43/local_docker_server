@@ -9,4 +9,3 @@ def test_server():
     cfg = Config.fromfile(cfg_file)
     server = Server(cfg=cfg)
 
-    server.user_checks(server.users)

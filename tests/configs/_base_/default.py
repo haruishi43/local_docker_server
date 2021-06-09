@@ -1,3 +1,7 @@
+image_path = "./tests/images",  # path to the dockerfiles
+labels = dict(
+    manager="dhole",
+)
 server = dict(
     ip="localhost",
     port_id=9,  # first number of the 5 number port
@@ -9,8 +13,5 @@ server = dict(
     },
     ports={
         "{port_id}00{container_id}/tcp": 22,
-    },
-    labels={
-        "manager": "dhole",
     },
 )
