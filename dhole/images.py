@@ -37,8 +37,11 @@ class Image:
         assert image is not None, f"ERR: {self.name} did not build correctly"
         return image
 
-    def delete(self):
-        pass
+    def remove(self):
+        print(f"Trying to remove {self.name}")
+        # docker.image.prune(all=True, filter=self.labels)  # doesn't work!
+        image = docker.image.inspect(self.name)
+        image.remove()
 
 
 class ImageCollection:

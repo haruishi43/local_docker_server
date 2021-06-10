@@ -11,3 +11,7 @@ if __name__ == "__main__":
 
     server = ServerV1(cfg)
     server.run_containers()
+
+    # remove containers
+    # server.stop_containers()
+    # server.remove_containers()

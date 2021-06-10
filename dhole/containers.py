@@ -8,10 +8,9 @@ containers.
 
 from typing import Dict, List, Optional, Tuple, Union
 
-from python_on_whales.utils import DockerException
-
 from .config import ConfigDict
 from .env import docker
+from .errors import DockerException
 
 # `memlock` and `stack`
 DEFAULT_ULIMIT = ["memlock=-1:-1"]
@@ -107,7 +106,11 @@ class Container:
         pass
 
     def stop(self):
-        pass
+        status = self.check_status()
+        if status not in STATES:
+            print(f"{self.name} is probably not created yet")
+            return
+        docker.container.stop(self.name)
 
     def restart(self):
         pass
@@ -115,8 +118,19 @@ class Container:
     def status(self):
         pass
 
-    def delete(self):
-        pass
+    def remove(self, force: bool = False):
+        status = self.check_status()
+        if status not in STATES:
+            print(f"{self.name} is probably not created yet")
+            return
+
+        assert force or status == "exited", \
+            f"ERR: {self.name} has not been exited, try stopping first"
+
+        docker.container.remove(
+            self.name,
+            force=force,
+        )
 
 
 class ContainerCollection:

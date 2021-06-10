@@ -38,3 +38,18 @@ class ServerV1:
         for container in containers:
             print(container)
             container.run()
+
+    def stop_containers(self):
+        containers = self.users.containers
+        for container in containers:
+            container.stop()
+
+    def remove_containers(self, force: bool = False):
+        # NOTE: this is very scary
+        containers = self.users.containers
+        for container in containers:
+            container.remove(force=force)
+
+    def remove_unused_images(self):
+        for image in self.images:
+            image.remove()

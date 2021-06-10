@@ -9,7 +9,8 @@ config_path = "./configs/demo.py"
 if __name__ == "__main__":
     cfg = load_cfg(config_path)
 
-    print(cfg)
-
     server = ServerV1(cfg)
     server.build_images()
+
+    # Removing the images that users used
+    # server.remove_unused_images()
