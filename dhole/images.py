@@ -1,35 +1,11 @@
 #!/usr/bin/env python3
 
 from copy import deepcopy
+import os
 from typing import List, Union
 
 from .config import Config, ConfigDict
-from .env import CLIENT
-from .errors import APIError, BuildError
-from .logger import logger
-
-
-def build_image(
-    root: str,
-    dockerfile: str,
-    tag: str,
-):
-    try:
-        logger.debug(f"building image {tag}")
-        img, _ = CLIENT.images.build(
-            path=root,
-            dockerfile=dockerfile,
-            tag=tag,
-            rm=True,
-        )
-    except BuildError as e:
-        logger.error(e)
-        raise e
-    except APIError as e:
-        logger.error(e)
-        raise e
-
-    return img
+from .env import docker
 
 
 class Image:
@@ -50,12 +26,15 @@ class Image:
         )
 
     def build(self):
-        logger.info(f"Building {self.name}...")
-        image = build_image(
-            root=self.path,
-            dockerfile=f"{self.name}.dockerfile",
-            tag=self.labels,
+        print(f"Building {self.name}...")
+        image = docker.build(
+            context_path=self.path,
+            file=os.path.join(self.path, f"{self.name}.dockerfile"),
+            labels=self.labels,
+            tags=[self.name],
+            progress=False,  # False to suppress
         )
+        assert image is not None, f"ERR: {self.name} did not build correctly"
         return image
 
     def delete(self):
@@ -69,7 +48,7 @@ class ImageCollection:
         cfg: Config,
     ) -> None:
         if len(set(images)) < len(images):
-            logger.warning("WARN: there are duplicate images")
+            print("WARN: there are duplicate images")
             images = list(set(images))
 
         self.names = images

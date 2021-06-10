@@ -9,8 +9,7 @@ config_path = "./configs/demo.py"
 if __name__ == "__main__":
     cfg = load_cfg(config_path)
 
-    server = ServerV1(cfg)
-    # server.build_images()
+    print(cfg)
 
-    for user in server.users:
-        print(user)
+    server = ServerV1(cfg)
+    server.build_images()

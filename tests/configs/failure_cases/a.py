@@ -14,8 +14,6 @@ server = dict(
     ports={
         "{port_id}00{container_id}/tcp": 22,
     },
-)
-server = dict(
     users=[
         "testuser1",
     ],

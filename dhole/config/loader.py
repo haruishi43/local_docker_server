@@ -8,7 +8,7 @@ so that it can be used without anymore refinements.
 
 from copy import deepcopy
 import os
-from typing import Dict, Union
+from typing import Dict, List, Tuple, Union
 
 from .config import Config, ConfigDict
 
@@ -23,7 +23,12 @@ def _check_key(key: str, cfg: Union[Config, ConfigDict, dict]) -> None:
 
 
 def _fill_volumes_with_string(
-    unrefined_volumes: Dict[str, Dict[str, str]],
+    unrefined_volumes: List[
+        Union[
+            Tuple[str, str],
+            Tuple[str, str, str],
+        ],
+    ],
     user: str,
     target_user_name: str,
 ) -> Dict[str, Dict[str, str]]:
@@ -44,16 +49,37 @@ def _fill_volumes_with_string(
         "user": user,
         "home": f"/home/{target_user_name}",
     }
-    volumes = {}
-    for k, v in deepcopy(unrefined_volumes).items():
-        key = k.format(**args)
-        v = v["bind"].format(**args)
-        volumes[key] = v
+    volumes = []
+    for volume in unrefined_volumes:
+        if len(volume) == 2:
+            volumes.append(
+                (
+                    volume[0].format(**args),
+                    volume[1].format(**args),
+                )
+            )
+        elif len(volume) == 3:
+            volumes.append(
+                (
+                    volume[0].format(**args),
+                    volume[1].format(**args),
+                    volume[2],
+                )
+            )
+        else:
+            raise ValueError(volume)
+    assert len(set(volumes)) == len(volumes), \
+        f"ERR: volumes container duplicates, {volumes}"
     return volumes
 
 
 def _fill_ports_with_strings(
-    unrefined_ports: Dict[str, int],
+    unrefined_ports: List[
+        Union[
+            Tuple[Union[str, int], Union[str, int]],
+            Tuple[Union[str, int], Union[str, int], str],
+        ]
+    ],
     port_id: int,
     container_id: int,
 ) -> Dict[str, int]:
@@ -80,10 +106,27 @@ def _fill_ports_with_strings(
         "port_id": str(port_id),
         "container_id": str(container_id).zfill(2),
     }
-    ports = {}
-    for k, v in deepcopy(unrefined_ports).items():
-        key = k.format(**args)
-        ports[key] = v
+    ports = []
+    for port in unrefined_ports:
+        assert isinstance(port[0], str) and isinstance(port[1], int), \
+            "ERR: make sure that port is (str, int, Optional[str])"
+        if len(port) == 2:
+            ports.append(
+                (
+                    port[0].format(**args),
+                    port[1],
+                )
+            )
+        elif len(port) == 3:
+            ports.append(
+                (
+                    port[0].format(**args),
+                    port[1],
+                    port[2],
+                )
+            )
+    assert len(set(ports)) == len(ports), \
+        f"ERR: ports might have duplicates {ports}"
     return ports
 
 
@@ -109,17 +152,17 @@ def _refine_user_cfg(
         _check_key("target_user_name", container_cfg)
 
         # overwrite the defaults
-        raw_volumes = {}
-        raw_ports = {}
+        raw_volumes = []
+        raw_ports = []
         labels = {}
         if "volumes" in cfg.server.keys():
-            raw_volumes.update(cfg.server.volumes)
+            raw_volumes += cfg.server.volumes
         if "volumes" in container_cfg.keys():
-            raw_volumes.update(container_cfg.volumes)
+            raw_volumes += container_cfg.volumes
         if "ports" in cfg.server.keys():
-            raw_ports.update(cfg.server.ports)
+            raw_ports += cfg.server.ports
         if "ports" in container_cfg.keys():
-            raw_ports.update(container_cfg.ports)
+            raw_ports += container_cfg.ports
         assert "labels" in cfg.keys(), \
             "ERR: `labels` should be `cfg`"
         labels.update(deepcopy(cfg.labels))

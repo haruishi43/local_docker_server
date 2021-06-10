@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
-import docker
-
-from .logger import logger
+from python_on_whales import DockerClient
 
 
-def init_client():
-    logger.debug("initializing client")
-    client = docker.from_env()
-    return client
+def init_docker():
+    print("initializing client")
+    docker = DockerClient()
+    return docker
 
 
-CLIENT = init_client()
+docker = init_docker()

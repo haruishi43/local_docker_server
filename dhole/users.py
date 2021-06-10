@@ -9,7 +9,6 @@ from typing import Dict, List, Union
 
 from .config import Config, ConfigDict
 from .containers import Container, ContainerCollection
-from .logger import logger
 
 __all__ = [
     "UserCollection",
@@ -106,8 +105,8 @@ class UserCollection:
         for _, user in users.items():
             for _, container_values in user.user_cfg.items():
                 container_ids.append(container_values.container_id)
-                host_volumes += list(container_values.volumes.keys())
-                ports += list(container_values.ports.keys())
+                host_volumes += [v[0] for v in container_values.volumes]
+                ports += [p[0] for p in container_values.ports]
 
         assert len(container_ids) == len(set(container_ids)), \
             f"ERR: has duplicate ids, {container_ids}"
@@ -117,7 +116,7 @@ class UserCollection:
         # mkdir for host_volumes if it doesn't exist
         for volume in host_volumes:
             if not os.path.exists(volume):
-                logger.warning(f"WARN: making {volume} because it didn't exist!")
+                print(f"WARN: making {volume} because it didn't exist!")
                 os.makedirs(volume)
 
     @property
