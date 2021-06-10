@@ -1,5 +1,24 @@
 # Useful Commands and Useful Knowledge:
 
+## How to stop
+
+Running the server locally will use up local resources, so when you're not using the server, you should stop it.
+
+```Bash
+$ docker stop $(docker ps -aq)
+```
+
+Note that you can restart the server using `./run_all.sh` again.
+
+## How to delete your containers and images
+
+```Bash
+$ docker stop $(docker ps -aq)
+$ docker rm $(docker ps -aq)  # delete all containers
+$ docker rmi $(docker images -q)  # delete all images
+```
+
+
 ## Build Command:
 ```
 docker build ./ -t [Image Name]
