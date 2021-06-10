@@ -66,7 +66,9 @@ def dump_sshconfig(
     config: str,
     server_name: str,
 ) -> None:
+    """Will be saved as `~/.ssh/config_{server_name}`
+    """
     fp = os.path.join(os.getenv("HOME"), ".ssh", f"config_{server_name}")
     with open(fp, "w+") as f:
         f.write(config)
-    os.chmod(fp, 0o664)
+    os.chmod(fp, 0o664)  # change permission!

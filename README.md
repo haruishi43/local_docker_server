@@ -16,3 +16,10 @@ pip intall -e .
 - Tinker with the `configs`
 - `python tools/build_images.py`
 - `python tools/run_containers.py`
+
+## Development
+
+### TODO:
+
+- [ ] clean up `tests` and make it better
+- [ ] make `tools` better using arguments
