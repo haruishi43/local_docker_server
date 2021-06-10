@@ -7,6 +7,7 @@ Server Module
 from .config import Config, load_cfg
 from .images import ImageCollection
 from .users import UserCollection
+from .sshconfig import create_sshconfig, dump_sshconfig
 
 
 class ServerV1:
@@ -21,10 +22,27 @@ class ServerV1:
             cfg=cfg,
         )
 
+        # server info
+        self.name = cfg.server.name
+        self.ip = cfg.server.ip
+
     @staticmethod
     def fromfile(filename: str):
         cfg = load_cfg(filename)
         return ServerV1(cfg=cfg)
+
+    def output_user_sshconfig(
+        self,
+        user: str,
+    ):
+        user = self.users[user]
+        s = create_sshconfig(
+            name=self.name,
+            ip=self.ip,
+            containers=user.containers,
+        )
+        print(s)
+        dump_sshconfig(s, self.name)
 
     def build_images(self):
         # TODO: Parallel

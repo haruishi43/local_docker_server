@@ -21,7 +21,7 @@ class User:
         user_name: str,
         user_cfg: ConfigDict,
     ) -> None:
-        self.user_name = user_name
+        self.name = user_name
         self.user_cfg = user_cfg
 
         self.container_collection = ContainerCollection(
@@ -31,7 +31,7 @@ class User:
     def __repr__(self) -> str:
         containers = list(self.container_collection.containers.keys())
         return (
-            f"User: {self.user_name}\n"
+            f"User: {self.name}\n"
             f"\t Containers: {containers}\n"
         )
 
@@ -50,7 +50,7 @@ class User:
             # for now, just check if the container has container_id, which is unique
             if "container_id" in v.keys():
                 containers.append(k)
-        assert len(containers) > 0, f"ERR: {self.user_name} doesn't have any containers"
+        assert len(containers) > 0, f"ERR: {self.name} doesn't have any containers"
         return containers
 
     @property
@@ -61,7 +61,7 @@ class User:
             if image_name is not None:
                 images.append(image_name)
         images = list(set(images))
-        assert len(images) > 0, f"ERR: {self.user_name} doesn't have any images"
+        assert len(images) > 0, f"ERR: {self.name} doesn't have any images"
         return images
 
 

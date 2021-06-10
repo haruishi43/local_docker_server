@@ -1,5 +1,6 @@
 _base_ = ['./_base_/default.py']
 server = dict(
+    name="demo",
     users=[
         "user1",
         "user2",
