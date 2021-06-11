@@ -5,7 +5,7 @@ Server Module
 """
 
 from .config import Config, load_cfg
-from .images import ImageCollection
+from .images import Image, ImageCollection
 from .users import UserCollection
 from .sshconfig import create_sshconfig, dump_sshconfig
 
@@ -44,11 +44,23 @@ class ServerV1:
         print(s)
         dump_sshconfig(s, self.name)
 
+    def build_image(self, name: str):
+        self.images[name].build()
+
     def build_images(self):
-        # TODO: Parallel
-        for image in self.images:
-            print(image)
+        from threading import Thread
+
+        def build(image: Image):
             image.build()
+
+        threads = []
+        for image in self.images:
+            thread = Thread(target=build, args=(image,))
+            threads.append(thread)
+            thread.start()
+
+        for thread in threads:
+            thread.join()
 
     def run_containers(self):
         containers = self.users.containers
